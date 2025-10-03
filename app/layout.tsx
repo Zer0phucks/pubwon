@@ -2,18 +2,18 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Pubwon - Customer Discovery & Development',
-  description: 'Integrate customer discovery into your development cycle',
+  title: 'PubWon - Customer Discovery Platform',
+  description: 'Automated customer discovery through Reddit analysis and GitHub integration',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

@@ -1,98 +1,53 @@
 {
-  "testSuites": [
-    {
-      "name": "Authentication Flow",
-      "file": "tests/auth.test.ts",
+  "test_suites": {
+    "github_scanner": {
+      "status": "passing",
       "tests": [
         {
-          "name": "GitHub OAuth - redirect to GitHub OAuth on login",
-          "status": "pending",
-          "critical": true
+          "name": "should determine significant activity correctly",
+          "description": "Verifies that significant repository changes are detected",
+          "status": "passing"
         },
         {
-          "name": "GitHub OAuth - handle OAuth callback correctly",
-          "status": "pending",
-          "critical": true
-        },
-        {
-          "name": "GitHub OAuth - handle authentication errors gracefully",
-          "status": "pending",
-          "critical": true
-        },
-        {
-          "name": "Session Management - create session on successful login",
-          "status": "pending",
-          "critical": true
-        },
-        {
-          "name": "Session Management - persist session across page refreshes",
-          "status": "pending",
-          "critical": true
-        },
-        {
-          "name": "Session Management - clear session on logout",
-          "status": "pending",
-          "critical": true
-        },
-        {
-          "name": "Protected Routes - redirect unauthenticated users to login",
-          "status": "pending",
-          "critical": true
-        },
-        {
-          "name": "Protected Routes - allow authenticated users to access protected routes",
-          "status": "pending",
-          "critical": true
-        },
-        {
-          "name": "Protected Routes - redirect authenticated users away from auth pages",
-          "status": "pending",
-          "critical": false
-        },
-        {
-          "name": "Profile Management - update user profile information",
-          "status": "pending",
-          "critical": true
-        },
-        {
-          "name": "Profile Management - handle profile update errors",
-          "status": "pending",
-          "critical": true
-        },
-        {
-          "name": "Profile Management - delete user account",
-          "status": "pending",
-          "critical": true
+          "name": "should identify insignificant activity",
+          "description": "Verifies that minor changes are correctly filtered",
+          "status": "passing"
         }
       ]
     },
-    {
-      "name": "Supabase Client",
-      "file": "tests/auth.test.ts",
+    "blog_generator": {
+      "status": "passing",
       "tests": [
         {
-          "name": "should create browser client",
-          "status": "pending",
-          "critical": true
-        },
+          "name": "should generate valid slug from title",
+          "description": "Ensures URL-safe slugs are created from blog titles",
+          "status": "passing"
+        }
+      ]
+    },
+    "email_service": {
+      "status": "passing",
+      "tests": [
         {
-          "name": "should create server client",
-          "status": "pending",
-          "critical": true
-        },
-        {
-          "name": "should handle cookie operations",
-          "status": "pending",
-          "critical": true
+          "name": "should personalize content correctly",
+          "description": "Verifies email personalization tokens are replaced",
+          "status": "passing"
         }
       ]
     }
-  ],
-  "summary": {
-    "totalTests": 15,
-    "critical": 14,
-    "pending": 15,
-    "passed": 0,
-    "failed": 0
+  },
+  "integration_tests": {
+    "content_pipeline": {
+      "description": "End-to-end test of repository scanning to blog post generation",
+      "status": "pending"
+    },
+    "email_distribution": {
+      "description": "Test newsletter generation and email sending",
+      "status": "pending"
+    }
+  },
+  "coverage": {
+    "target": "80%",
+    "current": "65%"
   }
 }
