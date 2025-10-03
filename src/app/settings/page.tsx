@@ -290,36 +290,55 @@ function SubscriptionSettings() {
 }
 
 function AIModelSettings() {
+  const models = [
+    // OpenAI Models
+    { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'OpenAI', description: 'Fast & cost-effective', recommended: true, cost: '$0.15/1M tokens' },
+    { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI', description: 'Most advanced OpenAI model', cost: '$2.50/1M tokens' },
+    { id: 'gpt-4', name: 'GPT-4', provider: 'OpenAI', description: 'Previous generation flagship', cost: '$30/1M tokens' },
+    { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'OpenAI', description: 'Legacy fast model', cost: '$0.50/1M tokens' },
+
+    // Anthropic Models
+    { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', description: 'Best for complex tasks', cost: '$3.00/1M tokens' },
+    { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', provider: 'Anthropic', description: 'Highest intelligence', cost: '$15/1M tokens' },
+    { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet', provider: 'Anthropic', description: 'Balanced performance', cost: '$3.00/1M tokens' },
+    { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku', provider: 'Anthropic', description: 'Fast & efficient', cost: '$0.25/1M tokens' },
+  ];
+
   return (
     <section id="ai" className="bg-white rounded-lg shadow p-6">
       <h2 className="text-xl font-semibold text-gray-900 mb-4">AI Model Selection</h2>
       <p className="text-gray-600 mb-4">
-        Choose which AI model to use for content generation.
+        Choose which AI model to use for content generation via Vercel AI Gateway.
       </p>
-      <div className="space-y-3">
-        {[
-          { name: 'GPT-4', description: 'Most advanced, best quality', recommended: true },
-          { name: 'GPT-3.5 Turbo', description: 'Faster, cost-effective' },
-          { name: 'Claude 3', description: 'Longer context, detailed analysis' },
-        ].map((model) => (
-          <label
-            key={model.name}
-            className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
-          >
-            <input type="radio" name="ai-model" className="mr-3" />
-            <div className="flex-1">
-              <div className="flex items-center">
-                <span className="font-medium text-gray-900">{model.name}</span>
-                {model.recommended && (
-                  <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-                    Recommended
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-gray-500">{model.description}</p>
-            </div>
-          </label>
-        ))}
+
+      <div className="mb-4">
+        <select
+          name="ai-model"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          {models.map((model) => (
+            <option key={model.id} value={model.id}>
+              {model.name} ({model.provider}) - {model.description} - {model.cost}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-3 mt-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="font-medium text-blue-900 mb-2">Model Information</h3>
+          <ul className="text-sm text-blue-800 space-y-1">
+            <li>• All models accessed through Vercel AI Gateway</li>
+            <li>• Costs shown are approximate input token rates</li>
+            <li>• Recommended model balances quality and cost</li>
+            <li>• OpenAI models excel at code and structured outputs</li>
+            <li>• Anthropic models excel at analysis and long contexts</li>
+          </ul>
+        </div>
+
+        <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          Save Model Preference
+        </button>
       </div>
     </section>
   );

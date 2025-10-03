@@ -2,15 +2,22 @@
  * AI API Client
  * Phase 1.4: External APIs Setup
  *
- * Unified interface for OpenAI and Anthropic APIs
+ * Unified interface for AI providers via Vercel AI Gateway
  */
 
-import OpenAI from 'openai';
+import { generateText, streamText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  organization: process.env.OPENAI_ORG_ID,
+// Initialize AI providers with Vercel AI Gateway
+const openai = createOpenAI({
+  baseURL: process.env.VERCEL_AI_GATEWAY_URL || 'https://gateway.ai.cloudflare.com/v1',
+  apiKey: process.env.OPENAI_API_KEY || '',
+});
+
+const anthropic = createAnthropic({
+  baseURL: process.env.VERCEL_AI_GATEWAY_URL || 'https://gateway.ai.cloudflare.com/v1',
+  apiKey: process.env.ANTHROPIC_API_KEY || '',
 });
 
 /**
@@ -35,6 +42,18 @@ export const AI_MODELS = {
       inputCostPer1M: 2.5,
       outputCostPer1M: 10.0,
     },
+    'gpt-4': {
+      name: 'GPT-4',
+      contextWindow: 8192,
+      inputCostPer1M: 30.0,
+      outputCostPer1M: 60.0,
+    },
+    'gpt-3.5-turbo': {
+      name: 'GPT-3.5 Turbo',
+      contextWindow: 16385,
+      inputCostPer1M: 0.5,
+      outputCostPer1M: 1.5,
+    },
   },
   anthropic: {
     'claude-3-5-sonnet-20241022': {
@@ -49,11 +68,36 @@ export const AI_MODELS = {
       inputCostPer1M: 15.0,
       outputCostPer1M: 75.0,
     },
+    'claude-3-sonnet-20240229': {
+      name: 'Claude 3 Sonnet',
+      contextWindow: 200000,
+      inputCostPer1M: 3.0,
+      outputCostPer1M: 15.0,
+    },
+    'claude-3-haiku-20240307': {
+      name: 'Claude 3 Haiku',
+      contextWindow: 200000,
+      inputCostPer1M: 0.25,
+      outputCostPer1M: 1.25,
+    },
   },
 } as const;
 
 /**
- * Generate chat completion using OpenAI
+ * Get model provider instance
+ */
+function getModelProvider(model: string) {
+  if (model.startsWith('gpt-')) {
+    return openai(model);
+  } else if (model.startsWith('claude-')) {
+    return anthropic(model);
+  }
+  // Default to GPT-4o mini
+  return openai('gpt-4o-mini');
+}
+
+/**
+ * Generate chat completion using Vercel AI SDK
  */
 export async function generateChatCompletion(
   messages: Array<{
@@ -68,25 +112,32 @@ export async function generateChatCompletion(
     stream?: boolean;
   } = {}
 ) {
-  const response = await openai.chat.completions.create({
-    model: options.model || process.env.OPENAI_MODEL || 'gpt-4o-mini',
-    messages,
-    temperature: options.temperature ?? 0.7,
-    max_tokens: options.maxTokens,
-    top_p: options.topP ?? 1,
-    stream: options.stream ?? false,
-  });
+  const modelName = options.model || process.env.AI_MODEL || 'gpt-4o-mini';
+  const model = getModelProvider(modelName);
 
   if (options.stream) {
-    return response as AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>;
+    return streamText({
+      model,
+      messages,
+      temperature: options.temperature ?? 0.7,
+      maxTokens: options.maxTokens,
+      topP: options.topP ?? 1,
+    });
   }
 
-  const completion = response as OpenAI.Chat.Completions.ChatCompletion;
+  const response = await generateText({
+    model,
+    messages,
+    temperature: options.temperature ?? 0.7,
+    maxTokens: options.maxTokens,
+    topP: options.topP ?? 1,
+  });
+
   return {
-    content: completion.choices[0].message.content,
-    usage: completion.usage,
-    model: completion.model,
-    finishReason: completion.choices[0].finish_reason,
+    content: response.text,
+    usage: response.usage,
+    model: modelName,
+    finishReason: response.finishReason,
   };
 }
 
@@ -104,14 +155,26 @@ export async function generateStructuredOutput<T = any>(
     schema?: object;
   } = {}
 ): Promise<T> {
-  const response = await openai.chat.completions.create({
-    model: options.model || process.env.OPENAI_MODEL || 'gpt-4o-mini',
-    messages,
+  const modelName = options.model || process.env.AI_MODEL || 'gpt-4o-mini';
+  const model = getModelProvider(modelName);
+
+  // Add JSON instruction to system message if not present
+  const enhancedMessages = [...messages];
+  const systemMessageIndex = enhancedMessages.findIndex(m => m.role === 'system');
+  if (systemMessageIndex >= 0) {
+    enhancedMessages[systemMessageIndex] = {
+      ...enhancedMessages[systemMessageIndex],
+      content: enhancedMessages[systemMessageIndex].content + '\n\nRespond with valid JSON only.',
+    };
+  }
+
+  const response = await generateText({
+    model,
+    messages: enhancedMessages,
     temperature: options.temperature ?? 0.7,
-    response_format: { type: 'json_object' },
   });
 
-  const content = response.choices[0].message.content;
+  const content = response.text;
   if (!content) {
     throw new Error('No content in AI response');
   }
@@ -121,6 +184,7 @@ export async function generateStructuredOutput<T = any>(
 
 /**
  * Generate embeddings for text
+ * Note: Embeddings still use OpenAI directly as Vercel AI SDK doesn't support embeddings yet
  */
 export async function generateEmbeddings(
   texts: string[],
@@ -128,12 +192,19 @@ export async function generateEmbeddings(
     model?: string;
   } = {}
 ) {
-  const response = await openai.embeddings.create({
-    model: options.model || 'text-embedding-3-small',
-    input: texts,
-  });
+  const { embed } = await import('ai');
+  const { openai: openaiProvider } = await import('@ai-sdk/openai');
 
-  return response.data.map(item => item.embedding);
+  const embeddingModel = openaiProvider.embedding(options.model || 'text-embedding-3-small');
+
+  const embeddings = await Promise.all(
+    texts.map(text => embed({
+      model: embeddingModel,
+      value: text,
+    }))
+  );
+
+  return embeddings.map(e => e.embedding);
 }
 
 /**

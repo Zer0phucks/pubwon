@@ -6,6 +6,7 @@ export const users = pgTable('users', {
   githubId: text('github_id').unique(),
   githubUsername: text('github_username'),
   githubAccessToken: text('github_access_token'),
+  preferredAiModel: text('preferred_ai_model').default('gpt-4o-mini'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

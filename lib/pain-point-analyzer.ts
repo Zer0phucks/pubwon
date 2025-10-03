@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import { generateStructuredOutput } from '@/src/lib/ai';
 import { ScrapedDiscussion } from './reddit-scraper';
 import { db } from './db';
 import { painPoints, redditDiscussions } from '@/drizzle/schema';
@@ -20,18 +20,6 @@ export interface PainPointAnalysis {
 }
 
 export class PainPointAnalyzer {
-  private openai: OpenAI;
-
-  constructor() {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not configured');
-    }
-
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-  }
-
   async analyzeDiscussion(
     discussion: ScrapedDiscussion,
     icpPersona: any
@@ -39,9 +27,8 @@ export class PainPointAnalyzer {
     const prompt = this.buildAnalysisPrompt(discussion, icpPersona);
 
     try {
-      const completion = await this.openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
+      const result = await generateStructuredOutput(
+        [
           {
             role: 'system',
             content: 'You are an expert at analyzing customer discussions and extracting pain points. You identify problems, frustrations, and unmet needs that people express in online discussions.',
@@ -51,12 +38,12 @@ export class PainPointAnalyzer {
             content: prompt,
           },
         ],
-        temperature: 0.7,
-        max_tokens: 2000,
-        response_format: { type: 'json_object' },
-      });
+        {
+          temperature: 0.7,
+          model: process.env.AI_MODEL || 'gpt-4o-mini',
+        }
+      );
 
-      const result = JSON.parse(completion.choices[0].message.content || '{}');
       return this.validateAndNormalizePainPoints(result.painPoints || []);
     } catch (error) {
       console.error('Error analyzing discussion:', error);

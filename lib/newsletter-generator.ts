@@ -1,8 +1,6 @@
-import OpenAI from 'openai';
+import { generateStructuredOutput } from '@/src/lib/ai';
 import { supabaseAdmin } from './supabase';
 import type { BlogPost } from '@/types/database';
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export interface NewsletterGeneration {
   subjectLine: string;
@@ -13,9 +11,8 @@ export interface NewsletterGeneration {
 
 export class NewsletterGenerator {
   async generateNewsletter(blogPost: BlogPost, repositoryName: string): Promise<NewsletterGeneration> {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      messages: [
+    const parsed = await generateStructuredOutput(
+      [
         {
           role: 'system',
           content: 'You are an email marketing expert. Create engaging newsletters from blog posts.',
@@ -30,12 +27,12 @@ Excerpt: ${blogPost.excerpt}
 Return JSON with: subject_line (compelling, 40-60 chars), preview_text (120 chars), html_content (email-friendly HTML), text_content (plain text version).`,
         },
       ],
-      response_format: { type: 'json_object' },
-      temperature: 0.7,
-      max_tokens: 2000,
-    });
+      {
+        temperature: 0.7,
+        model: process.env.AI_MODEL || 'gpt-4o-mini',
+      }
+    );
 
-    const parsed = JSON.parse(response.choices[0].message.content!);
     return {
       subjectLine: parsed.subject_line,
       previewText: parsed.preview_text,

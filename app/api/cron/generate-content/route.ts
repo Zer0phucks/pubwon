@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ message: 'Content generation completed', results });
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json({ error: 'Internal server error', details: String(err) }, { status: 500 });
   }
 }

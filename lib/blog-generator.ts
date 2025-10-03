@@ -1,10 +1,6 @@
-import OpenAI from 'openai';
+import { generateStructuredOutput } from '@/src/lib/ai';
 import { supabaseAdmin } from './supabase';
-import type { ActivitySummary, BlogPost, CodeSnippet } from '@/types/database';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import type { ActivitySummary, CodeSnippet } from '@/types/database';
 
 export interface BlogPostGeneration {
   title: string;
@@ -24,9 +20,8 @@ export class BlogGenerator {
   ): Promise<BlogPostGeneration> {
     const prompt = this.buildPrompt(repositoryName, activity);
 
-    const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-4-turbo-preview',
-      messages: [
+    const parsed = await generateStructuredOutput(
+      [
         {
           role: 'system',
           content: 'You are a technical content writer who creates engaging blog posts about software development progress.',
@@ -36,17 +31,12 @@ export class BlogGenerator {
           content: prompt,
         },
       ],
-      response_format: { type: 'json_object' },
-      temperature: 0.7,
-      max_tokens: 2500,
-    });
+      {
+        temperature: 0.7,
+        model: process.env.AI_MODEL || 'gpt-4o-mini',
+      }
+    );
 
-    const content = response.choices[0].message.content;
-    if (!content) {
-      throw new Error('No content generated');
-    }
-
-    const parsed = JSON.parse(content);
     return {
       title: parsed.title,
       slug: this.generateSlug(parsed.title),
