@@ -5,8 +5,24 @@
       "schedule": "0 0 * * *"
     },
     {
-      "path": "/api/cron/generate-content",
+      "path": "/api/cron/generate-blog-posts",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/analyze-subreddits",
+      "schedule": "0 2 * * 0"
+    },
+    {
+      "path": "/api/cron/check-subscriptions",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-database",
+      "schedule": "0 4 * * 1"
+    },
+    {
+      "path": "/api/cron/send-newsletters",
+      "schedule": "0 9 * * *"
     }
   ]
 }

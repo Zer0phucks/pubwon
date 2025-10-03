@@ -1,2 +1,2 @@
 // Jest setup file for global test configuration
-import '@testing-library/jest-dom';
+// Extended matchers for DOM testing (optional, install if needed: npm i -D @testing-library/jest-dom)

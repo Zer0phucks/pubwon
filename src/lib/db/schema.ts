@@ -178,3 +178,78 @@ export const emailSubscribers = pgTable('email_subscribers', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+/**
+ * Stripe Customers table - maps users to Stripe customers
+ */
+export const stripeCustomers = pgTable('stripe_customers', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull().unique(),
+  stripeCustomerId: text('stripe_customer_id').notNull().unique(),
+  email: text('email').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Subscriptions table - tracks user subscription status
+ */
+export const subscriptions = pgTable('subscriptions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull().unique(),
+  stripeCustomerId: text('stripe_customer_id').references(() => stripeCustomers.stripeCustomerId).notNull(),
+  stripeSubscriptionId: text('stripe_subscription_id').notNull().unique(),
+  stripePriceId: text('stripe_price_id').notNull(),
+  planName: text('plan_name').notNull(), // FREE, PRO_MONTHLY, PRO_YEARLY, ENTERPRISE
+  status: text('status').notNull(), // active, canceled, past_due, incomplete, trialing
+  currentPeriodStart: timestamp('current_period_start').notNull(),
+  currentPeriodEnd: timestamp('current_period_end').notNull(),
+  cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false),
+  canceledAt: timestamp('canceled_at'),
+  trialEnd: timestamp('trial_end'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Usage Tracking table - tracks feature usage for billing limits
+ */
+export const usageTracking = pgTable('usage_tracking', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull(),
+  month: text('month').notNull(), // YYYY-MM format
+  repositoriesConnected: integer('repositories_connected').default(0),
+  painPointsExtracted: integer('pain_points_extracted').default(0),
+  blogPostsGenerated: integer('blog_posts_generated').default(0),
+  newslettersSent: integer('newsletters_sent').default(0),
+  githubIssuesCreated: integer('github_issues_created').default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Analytics Events table - tracks user activity for analytics
+ */
+export const analyticsEvents = pgTable('analytics_events', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').references(() => users.id).notNull(),
+  eventType: text('event_type').notNull(), // pain_point_discovered, issue_created, blog_published, etc.
+  eventData: jsonb('event_data').$type<Record<string, any>>(),
+  resourceId: uuid('resource_id'), // ID of the related resource (pain point, blog post, etc.)
+  resourceType: text('resource_type'), // pain_point, blog_post, newsletter, github_issue
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+/**
+ * Blog Post Analytics table - tracks blog post views and engagement
+ */
+export const blogPostAnalytics = pgTable('blog_post_analytics', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  blogPostId: uuid('blog_post_id').references(() => blogPosts.id).notNull(),
+  date: timestamp('date').notNull(),
+  views: integer('views').default(0),
+  uniqueVisitors: integer('unique_visitors').default(0),
+  avgTimeOnPage: integer('avg_time_on_page').default(0), // seconds
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
