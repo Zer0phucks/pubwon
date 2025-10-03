@@ -16,6 +16,7 @@
   "dependencies": {
     "@octokit/rest": "^21.0.2",
     "@supabase/supabase-js": "^2.45.4",
+    "@types/react-syntax-highlighter": "^15.5.13",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.33.0",
     "next": "14.2.13",
@@ -24,6 +25,9 @@
     "postgres": "^3.4.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^15.6.6",
+    "remark-gfm": "^4.0.1",
     "resend": "^6.1.2",
     "snoowrap": "^1.23.0",
     "zod": "^3.23.8"
